@@ -1,0 +1,54 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.1.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = "../build"
+
+subprojects {
+    afterEvaluate { project ->
+
+        // Force Kotlin JVM target 17
+        if (project.plugins.hasPlugin("kotlin-android")) {
+            project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                kotlinOptions.jvmTarget = "17"
+            }
+        }
+
+        // Force Java toolchain 17 for ALL Android modules (app + plugins)
+        if (project.plugins.hasPlugin("com.android.application") ||
+            project.plugins.hasPlugin("com.android.library")) {
+
+            project.android {
+                compileSdkVersion 35
+
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+        if (project.hasProperty("android") && !project.android.hasProperty("namespace")) {
+            project.android.namespace = project.group
+        }
+
+        project.buildDir = "${rootProject.buildDir}/${project.name}"  
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
